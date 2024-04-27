@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Lines to Gist</title>
+  <style>
+    body {
+      background-color: #212121; /* Dark background color */
+      color: #fff; /* Light text color */
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    h1 {
+      color: #64B5F6; /* Header text color */
+      text-align: center;
+    }
+        h2 {
+      color: #64B5F6; /* Header text color */
+      text-align: center;
+    }
+    #currentContent {
+      margin: 20px auto;
+      max-width: 100%;
+      padding: 20px;
+      background-color: #333; /* Chat background color */
+      border-radius: 10px;
+    }
+    #contentDisplay {
+      white-space: pre-wrap; /* Preserve line breaks */
+      overflow-y: auto; /* Enable vertical scrolling if needed */
+      max-height: 300px; /* Limit height to enable scrolling */
+    }
+    form {
+      text-align: center;
+      margin-top: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    input[type="text"] {
+      width: 80%;
+      padding: 8px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      background-color: #444; /* Input background color */
+      color: #fff; /* Input text color */
+    }
+    input[type="submit"] {
+      padding: 8px 20px;
+      background-color: #64B5F6; /* Submit button background color */
+      color: #fff; /* Submit button text color */
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    input[type="submit"]:hover {
+      background-color: #2196F3; /* Hover color */
+    }
+  </style>
+</head>
+<body>
+  <h1>92chat</h1>
+
+  <div id="currentContent">
+    <h2>Chat log</h2>
+    <pre id="contentDisplay"></pre>
+  </div>
+  
+  <form id="addLineForm">
+    <label for="content">Type to chat</label><br>
+    <input id="content" name="content" type="text"><br>
+    <input type="submit" value="Send">
+  </form>
+
+<script>
+  const accessToken = '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';
+  const gistId = '046944aea115ba78abd230101297bd9c';
+  let etag = null;
+  let currentContent = '';
+
+  function fetchFileContent() {
+    const headers = { Authorization: `token ${accessToken}` };
+    if (etag) headers['If-None-Match'] = etag;
+
+    fetch(`https://api.github.com/gists/${gistId}`, {
+      method: 'GET',
+      headers
+    })
+    .then(response => {
+      if (response.status === 304) return;
+      if (!response.ok) throw new Error('Failed to fetch Gist');
+      etag = response.headers.get('ETag');
+      return response.json();
+    })
+    .then(data => {
+      if (data) {
+        const newContent = data.files['chat.txt'].content;
+        if (newContent !== currentContent) {
+          currentContent = newContent;
+          document.getElementById('contentDisplay').textContent = currentContent;
+        }
+      }
+    })
+    .catch(error => console.error('Error fetching:', error));
+  }
+
+  window.onload = fetchFileContent;
+
+function addLineToGist(newContent) {
+  const headers = { Authorization: `token ${accessToken}` };
+  if (etag) headers['If-None-Match'] = etag;
+
+  fetch(`https://api.github.com/gists/${gistId}`, {
+    method: 'GET',
+    headers
+  })
+  .then(response => {
+    if (!response.ok) throw new Error(`Failed to fetch Gist: ${response.status} ${response.statusText}`);
+    return response.json();
+  })
+  .then(data => {
+    currentContent = data.files['chat.txt'].content;
+    const lines = currentContent.split('\n');
+    if (lines.length > 15) lines.shift();
+    const updatedContent = lines.join('\n') + '\n' + newContent;
+
+    return fetch(`https://api.github.com/gists/${gistId}`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `token ${accessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ files: { 'chat.txt': { content: updatedContent } } })
+    });
+  })
+  .then(response => {
+    if (!response.ok) throw new Error(`Failed to update Gist: ${response.status} ${response.statusText}`);
+    console.log('Gist updated successfully');
+    fetchFileContent();
+  })
+  .catch(error => console.error('Error:', error));
+}
+
+  document.getElementById('addLineForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const newContent = document.getElementById('content').value;
+    addLineToGist(newContent);
+    document.getElementById('content').value = ''; // Clear input field after submission
+  });
+
+  setInterval(fetchFileContent, 2000); // Update every 2 seconds
+</script>
+
+</body>
+</html>
