@@ -85,7 +85,7 @@
     const headers = { Authorization: `token ${accessToken}` };
     if (etag) headers['If-None-Match'] = etag;
 
-    fetch(`https://gist.githubusercontent.com/sebastian-92/046944aea115ba78abd230101297bd9c/raw/9f498c757a37254bb7ca3ad860fbab578260411f/chat.txt`, {
+    fetch(`https://corsproxy.io/?https%3A%2F%2Fgist.githubusercontent.com%2Fsebastian-92%2F046944aea115ba78abd230101297bd9c%2Fraw%2F9f498c757a37254bb7ca3ad860fbab578260411f%2Fchat.txt`, {
       method: 'GET',
       headers
     })
