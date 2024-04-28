@@ -85,7 +85,7 @@
     const headers = { Authorization: `token ${accessToken}` };
     if (etag) headers['If-None-Match'] = etag;
 
-    fetch(`https://api.github.com/gists/${gistId}`, {
+    fetch(`https://gist.githubusercontent.com/sebastian-92/046944aea115ba78abd230101297bd9c/raw/9f498c757a37254bb7ca3ad860fbab578260411f/chat.txt`, {
       method: 'GET',
       headers
     })
